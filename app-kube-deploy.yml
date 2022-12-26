@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-deploy
+  labels:
+    app: node
+spec:
+  selector:
+    matchLabels:
+      app: node
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 2
+  revisionHistoryLimit: 3
+  template:
+    metadata:
+      labels:
+        app: node
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: type
+                    operator: NotIn
+                    values:
+                      - master
+      containers:
+        - name: node
+          image: akarx/kube-prometheus-sample:latest
+          # resources:
+          #   limits:
+          #     cpu: 500m
+          #     memory: "300Mi"
+          #   requests:
+          #     cpu: 300m
+          #     memory: "200Mi"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: node
+  labels:
+    app: node
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: node-api
+      nodePort: 30100
+  selector:
+    app: node
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: node-service-monitor
+spec:
+  selector:
+    matchLabels:
+      app: node
+  endpoints:
+    - path: /metrics
+      interval: 5s
+      port: node-api
+      scheme: http
+      honorLabels: true
+      honorTimestamps: true
+
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: node-scaledobject
+  namespace: default
+spec:
+  scaleTargetRef:
+    kind: Deployment
+    name: node-deploy
+  minReplicaCount: 1
+  maxReplicaCount: 15
+  cooldownPeriod: 30
+  pollingInterval: 1
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: http://prom-op-akarx-prometheus.default:9090
+        metricName: total_http_requests_duration_seconds
+        query: |
+          sum(http_request_duration_seconds_sum)
+        threshold: "500"
