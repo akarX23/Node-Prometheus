@@ -31,13 +31,6 @@ spec:
       containers:
         - name: node
           image: akarx/kube-prometheus-sample:latest
-          # resources:
-          #   limits:
-          #     cpu: 500m
-          #     memory: "300Mi"
-          #   requests:
-          #     cpu: 300m
-          #     memory: "200Mi"
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000

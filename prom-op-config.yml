@@ -1,0 +1,77 @@
+nameOverride: "akarx"
+
+# namespaceOverride: "prometheus"
+
+fullnameOverride: "akarx"
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false # Important
+    serviceMonitorSelector: {} # Important
+    scrapeInterval: "10s"
+    podAntiAffinity: "hard"
+    affinity: # Important
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: type
+                  operator: In
+                  values:
+                    - master
+  service: # Important
+    type: NodePort
+    nodePort: 30090
+  servicePerReplica:
+    type: NodePort
+    nodePort: 30092
+
+prometheusOperator: # Important
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: type
+                operator: In
+                values:
+                  - master
+
+alertmanager:
+  alertManagerSpec:
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: type
+                  operator: In
+                  values:
+                    - master
+
+grafana: # Important
+  defaultDashboardsTimezone: Asia/Kolkata
+  adminPassword: akarx-operator
+  service:
+    type: NodePort
+    nodePort: 30091
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: type
+                operator: In
+                values:
+                  - master
+
+kube-state-metrics: # Important
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: type
+                operator: In
+                values:
+                  - master
