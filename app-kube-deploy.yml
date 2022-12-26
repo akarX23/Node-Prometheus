@@ -95,4 +95,4 @@ spec:
         metricName: total_http_requests_duration_seconds
         query: |
           sum(http_request_duration_seconds_sum)
-        threshold: "15"
+        threshold: "60"
