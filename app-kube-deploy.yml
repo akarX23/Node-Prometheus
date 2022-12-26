@@ -91,7 +91,7 @@ spec:
   triggers:
     - type: prometheus
       metadata:
-        serverAddress: http://prom-op-akarx-prometheus.default:9090
+        serverAddress: http://akarx-prometheus.default:9090
         metricName: total_http_requests_duration_seconds
         query: |
           sum(http_request_duration_seconds_sum)
